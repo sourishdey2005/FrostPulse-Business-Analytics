@@ -183,29 +183,38 @@ def page_executive(df: pd.DataFrame, k: dict):
         ("Repeat Purchase Rate", f"{ba.compute_advanced_kpis(df)['repeat_rate']}%", None, None),
     ])
 
-    section("Revenue Trend")
-    rev_m = ba.compute_revenue_by_period(df, "month")
-    if not rev_m.empty:
-        fig = px.line(rev_m, x="period", y="revenue", markers=True,
-                      labels={"period": "Month", "revenue": "Revenue ($)"})
-        render_chart(fig, "exec_rev_trend", height=360)
-    else:
-        empty_state()
-
-    section("Profit Trend")
-    prof_m = ba.compute_profit_by_month(df)
-    if not prof_m.empty:
-        fig = go.Figure()
-        fig.add_trace(go.Scatter(x=prof_m["period"], y=prof_m["gross_profit"], name="Gross Profit",
-                                 mode="lines+markers", line=dict(color=ACCENT)))
-        fig.add_trace(go.Scatter(x=prof_m["period"], y=prof_m["net_profit"], name="Net Profit",
-                                 mode="lines+markers", line=dict(color=POS)))
-        render_chart(fig, "exec_profit_trend", height=360)
+    section("Revenue Distribution")
+    rev_dist = ba.compute_revenue_distribution(df)
+    if not rev_dist.empty:
+        fig = px.histogram(rev_dist, x="bucket", y="count", nbins=25,
+                          labels={"bucket": "Revenue ($)", "count": "Order Lines"})
+        render_chart(fig, "exec_rev_dist", height=340, showlegend=False)
     else:
         empty_state()
 
     c1, c2 = st.columns(2)
     with c1:
+        section("Channel Revenue Share")
+        chan_perf = ba.compute_channel_share(df)
+        if not chan_perf.empty:
+            fig = px.pie(chan_perf, names="channel", values="revenue", hole=0.5,
+                        color_discrete_sequence=PALETTE)
+            render_chart(fig, "exec_chan_pie", height=340)
+        else:
+            empty_state()
+    with c2:
+        section("Profit by Category")
+        cat_profit = df.groupby("category")["net_profit"].sum().reset_index().sort_values("net_profit", ascending=True)
+        if not cat_profit.empty:
+            fig = px.bar(cat_profit, x="net_profit", y="category", orientation="h",
+                        color="net_profit", color_continuous_scale="Blues",
+                        labels={"net_profit": "Net Profit ($)", "category": "Category"})
+            render_chart(fig, "exec_cat_profit", height=340, showlegend=False)
+        else:
+            empty_state()
+
+    c3, c4 = st.columns(2)
+    with c3:
         section("Daily Revenue Trend")
         daily = ba.compute_daily_trends(df)
         if not daily.empty:
@@ -214,7 +223,7 @@ def page_executive(df: pd.DataFrame, k: dict):
             render_chart(fig, "exec_daily_rev", height=320)
         else:
             empty_state()
-    with c2:
+    with c4:
         section("Weekly Revenue Trend")
         weekly = ba.compute_weekly_trends(df)
         if not weekly.empty:

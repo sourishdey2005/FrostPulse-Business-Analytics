@@ -10,20 +10,33 @@ short_description: Cold-chain intelligence and shipment risk monitoring
 
 # FrostPulse
 
-A complete end-to-end synthetic cold-chain data engineering and analytics platform, built with Python, SQLite, Streamlit, and Plotly, and packaged for one-click Docker deployment on Hugging Face Spaces.
+**Live Dashboard:** [https://frostpulse-business-analytics.streamlit.app/](https://frostpulse-business-analytics.streamlit.app/)
 
-## Problem
+FrostPulse is an end-to-end synthetic cold-chain data engineering and analytics platform, built with Python, SQLite, Streamlit, and Plotly. It simulates realistic refrigerated shipment telemetry, validates and transforms it through a multi-stage pipeline, scores risk, detects incidents, and surfaces everything on a live auto-refreshing dashboard — alongside a full Business Analytics layer with 80+ executive visualizations.
 
-Cold-chain logistics operators need continuous visibility into refrigerated shipment conditions — temperature, humidity, vehicle battery, door status, and location — to prevent spoilage, catch equipment failures early, and quantify shipment risk. FrostPulse simulates this environment end-to-end: it generates realistic telemetry, runs it through a validation and transformation pipeline, scores risk, detects incidents, and surfaces everything on a live analytics dashboard.
+---
+
+## What It Does
+
+FrostPulse solves a real operational problem: cold-chain logistics operators need continuous visibility into shipment conditions — temperature, humidity, vehicle battery, door status, and location — to prevent spoilage, catch equipment failures early, and quantify shipment risk.
+
+The platform simulates this environment end-to-end:
+1. **Generates** realistic synthetic sensor telemetry with injected anomalies
+2. **Stores** raw events in SQLite (WAL mode) for concurrent read/write
+3. **Validates** every record with explicit quality checks and rejection reasons
+4. **Transforms** data with risk scoring, incident detection, and aggregation
+5. **Serves** two live dashboards that auto-refresh and pick up new data automatically
+
+---
 
 ## Architecture
 
 ```mermaid
 flowchart TD
     A[Synthetic IoT Generator] --> B[Raw SQLite Layer]
-    B --> C[Validation and Cleaning]
+    B --> C[Validation & Cleaning]
     C -->|invalid| G[Rejected Events]
-    C -->|valid| D[Transformation and Risk Engine]
+    C -->|valid| D[Transformation & Risk Engine]
     D --> E[Analytics Tables]
     D --> H[Incident Detection]
     E --> F[Streamlit Dashboard]
@@ -38,96 +51,127 @@ flowchart TD
     F --> L
 ```
 
+---
+
 ## Technology Stack
 
-- **Python 3.11**
-- **Streamlit** — dashboard UI and auto-refreshing fragments
-- **SQLite** (WAL mode) — single-file embedded database, zero external services
-- **Plotly** — line, bar, donut, scatter, area, gauge, radar, heatmap, treemap, Sankey, and geo-bubble visualizations
-- **Pandas / NumPy** — data shaping and KPI calculations
+| Component | Technology |
+|-----------|-----------|
+| Language | Python 3.11 |
+| Dashboard | Streamlit (auto-refreshing fragments) |
+| Database | SQLite (WAL mode, parameterized queries) |
+| Visualizations | Plotly (line, bar, pie, histogram, scatter, heatmap, treemap, gauge, Sankey, geo) |
+| Data Processing | Pandas / NumPy |
+| Deployment | Docker / Hugging Face Spaces |
 
-No PostgreSQL, MySQL, Kafka, Redis, Airflow, or cloud credentials are required. Everything runs inside a single container.
+**No external services required** — no PostgreSQL, MySQL, Kafka, Redis, Airflow, or cloud credentials. Everything runs in a single container with a single SQLite file.
+
+---
 
 ## Data Pipeline
 
-1. **Generation** (`generator.py`) — produces realistic synthetic sensor events per vehicle/shipment, with roughly 8% of events containing an injected temperature anomaly.
-2. **Raw storage** (`database.py`) — every event is written to `raw_sensor_events` unmodified.
-3. **Validation** (`pipeline.py`) — checks for null keys, out-of-range temperature/humidity/battery/speed, invalid coordinates, and duplicate event IDs. Failing records are written to `rejected_events` with a reason, never silently dropped.
-4. **Transformation and risk scoring** (`pipeline.py`) — computes temperature status (SAFE / WARNING / CRITICAL), a 0–100 risk score from temperature, door status, humidity, battery, and speed, and a corresponding risk level (LOW / MEDIUM / HIGH / CRITICAL).
-5. **Incident detection** (`pipeline.py`) — creates incidents for critical temperature breaches, high risk scores, door-open events, and low battery, avoiding duplicates per event/type.
-6. **Analytics** (`analytics.py`) — all dashboard queries (KPIs, chart datasets, shipment health, pipeline health, data quality, freshness) live here, separate from UI code.
-7. **Dashboard** (`app.py`) — renders everything and re-runs the generation-and-pipeline cycle automatically every 5 seconds via a Streamlit fragment.
+| Stage | Module | Description |
+|-------|--------|-------------|
+| **Generation** | `generator.py` | Produces realistic synthetic sensor events per vehicle/shipment with injected temperature anomalies |
+| **Raw Storage** | `database.py` | Writes every event to `raw_sensor_events` unmodified |
+| **Validation** | `pipeline.py` | Checks null keys, out-of-range values, invalid coordinates, duplicate IDs. Failing records go to `rejected_events` with a reason |
+| **Transformation** | `pipeline.py` | Computes temperature status, 0–100 risk score, risk level, and composite health metrics |
+| **Incident Detection** | `pipeline.py` | Creates incidents for critical breaches, high risk, door-open events, and low battery |
+| **Analytics** | `analytics.py` | All dashboard queries (KPIs, charts, health metrics, pipeline stats) |
+| **Dashboard** | `app.py` | Renders everything and auto-refreshes every 20 seconds |
+
+---
 
 ## Dashboard Sections
 
-- **Top KPI row** — total shipments, active vehicles, total readings, at-risk shipments, temperature compliance, average risk score.
-- **Second KPI row** — critical incidents, warning incidents, average temperature, average humidity, low-battery vehicles, data quality score.
-- **Extended operational metrics** — anomaly rate, data quality checks passed, rejected records, top incident type, shipments in transit, highest-risk warehouse, riskiest vehicle, fleet average battery, healthy/at-risk shipment counts, average shipment health score, total incidents logged.
-- **Live Temperature Monitoring** — line chart of the most recent readings, colored by status.
-- **Temperature Compliance** — donut chart of SAFE / WARNING / CRITICAL readings.
-- **Shipment Risk Distribution** — bar chart of shipments by risk level.
-- **Risk by Food Category** — average risk score per food category.
-- **Vehicle Health** — horizontal bar chart of average risk per vehicle.
-- **Supply-Chain Risk Flow** — Sankey diagram of readings flowing from warehouse to food category to risk level.
-- **Environmental Telemetry** — humidity-over-time and battery-over-time line charts plus a speed-distribution bar chart.
-- **Risk & Compliance Analysis** — risk-score distribution histogram and a temperature-vs-risk scatter.
-- **Compliance by Food Category** — horizontal bar of temperature-compliance percentage per food category.
-- **Incident Analytics** — incident severity donut, incident-type bar chart, and an incident timeline scatter.
-- **Warehouse & Delivery Operations** — average risk by warehouse, delivery-status donut, and rejection-reason bar chart.
-- **System Health & Correlations** — composite system-health gauge and a metric correlation heatmap.
-- **Fleet Health & Status Trends** — fleet health radar (compliance, risk safety, battery, door discipline) and a stacked-area status-over-time chart.
-- **Pipeline Throughput** — generated/processed/rejected/incident counts across recent pipeline runs.
-- **Shipment Health** — table of the worst-performing shipments by composite health score.
-- **Incident Monitoring** — table of the most recent incidents.
-- **Pipeline Health** — records generated/processed/rejected, success rate, recent run history.
-- **Data Freshness** — seconds since the last processed event, with a healthy/warning/critical status.
+### Operations Panel
+Real-time cold-chain monitoring with 20+ sections:
 
-There is no sidebar anywhere in the application; every control and visualization sits on the main page.
+- **Top KPIs** — total shipments, active vehicles, total readings, at-risk shipments, temperature compliance, average risk score
+- **Extended Metrics** — anomaly rate, data quality score, rejected records, shipments in transit, fleet battery, health scores
+- **Live Temperature Monitoring** — real-time line chart colored by status
+- **Temperature Compliance** — donut chart of SAFE / WARNING / CRITICAL readings
+- **Shipment Risk Distribution** — bar chart of shipments by risk level
+- **Risk by Food Category** — average risk score per category
+- **Vehicle Health** — horizontal bar chart of average risk per vehicle
+- **Supply-Chain Risk Flow** — Sankey diagram of readings flowing from warehouse to category to risk level
+- **Environmental Telemetry** — humidity, battery, and speed charts
+- **Risk & Compliance Analysis** — risk-score histogram and temperature-vs-risk scatter
+- **Compliance by Food Category** — horizontal bar of compliance percentage per category
+- **Incident Analytics** — severity donut, incident-type bar, timeline scatter
+- **Warehouse & Delivery Operations** — average risk by warehouse, delivery-status donut, rejection-reason bar
+- **System Health & Correlations** — composite health gauge and correlation heatmap
+- **Fleet Health & Status Trends** — radar chart and stacked-area status chart
+- **Pipeline Throughput** — generated/processed/rejected counts across recent runs
+- **Shipment Health** — table of worst-performing shipments
+- **Incident Monitoring** — table of most recent incidents
+- **Pipeline Health** — records generated/processed/rejected, success rate, run history
+- **Data Freshness** — seconds since last processed event with health status
 
-## Business Analytics Layer
+### Business Analytics Panel
+Power BI-style executive view with 80+ visualizations across 8 pages:
 
-FrostPulse also ships a second, independent **Business Analytics** dashboard — a Power BI-style executive view built on a synthetic sales dataset (customers, products, orders, revenue, cost, profit). It shares the same SQLite database and the same clean data / calculation / UI separation, but is generated and rendered by its own modules so the cold-chain pipeline is never affected:
+- **Executive Overview** — 18 KPI cards, revenue distribution histogram, channel revenue pie chart, profit by category bar chart, daily/weekly trends, customer segments, MoM growth, executive score gauge
+- **Sales Analytics** — revenue by month/quarter/year, sales vs target, category treemap, product top 15, channel performance, discount impact analysis
+- **Customer Analytics** — customer segments, regional performance, new vs returning, retention/churn, order frequency, top 10 customers
+- **Product Analytics** — revenue/profit by product, bottom 10, category margin, discount/revenue scatter, top 10 deals
+- **Geographic Analytics** — sales by region, revenue by state, customer concentration, regional deep dive, margin analysis
+- **Profitability & Performance** — profit vs target, channel profitability, category/channel margin, KPI heatmap, MoM/YoY growth, executive score
+- **Advanced Analytics** — 20 charts (41–60): distributions, temporal patterns, scatter plots, correlation matrix, cohort retention, waterfall, funnel, Pareto
+- **Real-time Monitor** — hourly/daily/weekly trends, latest orders feed, channel/category performance, discount impact, basket size, order frequency
 
-- `business_generator.py` — synthetic customers, products, and 24 months of order lines (revenue, cost, gross/net profit, region, channel, category, discounts, dates). Idempotent seeding via `seed_business_data()`.
-- `business_analytics.py` — data access (`load_orders` with date / category / region / channel filters) and all 40 KPI calculations as pure pandas functions.
-- `business_dashboard.py` — the Power BI-style UI: light professional theme, reusable KPI cards, on-page filters, cross-cutting KPIs, tooltips, an export-to-CSV button, and six pages.
+---
 
-The two dashboards are selected from a single top-level radio (`Operations` / `Business Analytics`) — there is still no sidebar.
+## Live Demo
 
-### Business dashboard pages (the 40 visualizations)
+**Operations & Business Analytics Dashboard:**  
+[https://frostpulse-business-analytics.streamlit.app/](https://frostpulse-business-analytics.streamlit.app/)
 
-- **Executive Overview** — Total Revenue, Transactions, Customers, AOV, Gross Profit, Gross/Net Margin %, Revenue/Profit/Customer Growth %, Avg Revenue per Customer, Revenue & Profit trends, Executive Performance Score gauge.
-- **Sales Analytics** — Revenue by Month/Quarter/Year, Sales vs Target, Revenue Contribution by Category (treemap), Revenue by Product, Sales by Channel.
-- **Customer Analytics** — Customer counts & growth, CLV, Repeat Purchase Rate, Customer Distribution (donut), New vs Returning (stacked), Retention & Churn trends, Top 10 Customers.
-- **Product Analytics** — Revenue/Profit by Product, Bottom 10 Products, Category contribution, Discount vs Revenue/Profit, Quantity vs Revenue, Revenue & Profit distributions.
-- **Geographic Analytics** — Sales by Region (geo bubble), Revenue by State, Customer concentration.
-- **Profitability & Performance** — Gross/Net Profit, margins, Profit vs Target, Channel Profitability, KPI Performance Heatmap, Executive Performance Score.
+---
 
-## Automatic Refresh
+## Key Features
 
-The dashboard body is wrapped in a `@st.fragment(run_every=300)` function. Every 5 minutes, only that fragment reruns: it generates 3–8 new synthetic events, pushes them through the pipeline, and re-queries analytics — without a full-page reload and without blocking the Streamlit server.
+- **Auto-refresh every 20 seconds** — both panels update automatically without manual reload
+- **Live data generation** — new sensor events and business orders created continuously
+- **Natural data fluctuation** — cancellations, returns, and rolling time windows cause KPIs to rise and fall realistically
+- **12 product categories** — Frozen Seafood, Ice Cream, Fresh Meat, Dairy, Fresh Produce, Beverages, Baked Goods, Poultry, Organic, Ready-to-Eat, Confectionery, Snacks
+- **9 sales channels** — Online, Retail, Wholesale, Distributor, Direct, Franchise, Export, Government, Institutional
+- **30 vehicles** across 8 warehouses and 10 destination types
+- **6 delivery statuses** — IN_TRANSIT, LOADING, DELIVERED, DELAYED, CUSTOMS_HOLD, RETURNED
+- **Data export** — CSV export of filtered data from Business Analytics
+- **No sidebar** — clean single-page layout with top-level navigation
 
-## SQLite Usage
-
-A single file at `data/frostpulse.db` backs the entire application. WAL journal mode and a 30-second busy timeout allow the concurrent read/write pattern used by Streamlit reruns. Connections are short-lived (opened, used, closed) rather than held globally, and all writes use parameterized queries.
+---
 
 ## How This Demonstrates Data Engineering
 
-- A clear multi-stage pipeline: ingestion, raw storage, validation, transformation, aggregation, and serving.
-- Explicit data-quality checks with logged pass/fail results per run, not just a "looks fine" dashboard.
-- Rejected records are preserved with a reason rather than discarded.
-- A dimensional-style schema (`dim_vehicle`, `dim_shipment`, `fact_sensor_reading`, `fact_incident`) alongside operational tables (`pipeline_runs`, `data_quality_results`).
-- Indexes on the columns actually used for filtering and ordering in the analytics layer.
-- Business logic (risk scoring, incident rules) is centralized and testable, separate from both the UI and the raw ingestion path.
+- **Multi-stage pipeline** — ingestion, raw storage, validation, transformation, aggregation, and serving
+- **Explicit data quality** — every pipeline run logs pass/fail results with reasons, not just "looks fine"
+- **Rejected records preserved** — invalid data is stored with rejection reasons, never silently dropped
+- **Dimensional schema** — `dim_vehicle`, `dim_shipment`, `fact_sensor_reading`, `fact_incident` alongside operational tables
+- **Indexed queries** — indexes on columns actually used for filtering and ordering in analytics
+- **Centralized business logic** — risk scoring and incident rules are testable and separate from UI/ingestion
+- **Clean architecture** — data access, calculations, and UI are in separate modules
+
+---
 
 ## Run Locally
 
 ```bash
+# Clone the repository
+git clone https://github.com/sourishdey2005/FrostPulse-Business-Analytics.git
+cd FrostPulse-Business-Analytics
+
+# Install dependencies
 pip install -r requirements.txt
+
+# Run the app
 streamlit run app.py
 ```
 
-The app will create `data/frostpulse.db` automatically on first run and seed roughly 700 historical events spanning the last 45 minutes before the dashboard renders.
+The app creates `data/frostpulse.db` automatically on first run and seeds historical data before the dashboard renders.
+
+---
 
 ## Build and Run with Docker
 
@@ -138,16 +182,44 @@ docker run -p 7860:7860 frostpulse
 
 Then open `http://localhost:7860`.
 
+---
+
 ## Deploy to Hugging Face Spaces
 
-1. Create a new Space and select **Docker** as the SDK.
-2. Push this project's contents (including the `Dockerfile` and this `README.md` with its metadata block) to the Space repository.
-3. Hugging Face builds the Docker image automatically.
-4. Streamlit starts and binds to `0.0.0.0:7860` inside the container.
-5. On first boot, the app initializes SQLite, seeds historical data, and begins generating new events continuously.
-6. No additional configuration, secrets, or manual steps are required.
+1. Create a new Space and select **Docker** as the SDK
+2. Push this project's contents (including `Dockerfile` and `README.md`) to the Space repository
+3. Hugging Face builds the Docker image automatically
+4. Streamlit starts and binds to `0.0.0.0:7860` inside the container
+5. On first boot, the app initializes SQLite, seeds historical data, and begins generating new events continuously
+6. No additional configuration, secrets, or manual steps required
 
 ---
 
-Made by Sourish Dey
-FrostPulse — Cold-Chain Intelligence
+## Project Structure
+
+```
+frostpulse/
+├── app.py                     # Main entry point, navigation, live dashboard fragment
+├── analytics.py               # Operations analytics queries and KPIs
+├── business_analytics.py      # Business analytics calculations (80+ functions)
+├── business_dashboard.py      # Business Analytics UI (8 pages, 80+ charts)
+├── business_generator.py      # Synthetic sales data generator
+├── generator.py               # Synthetic sensor telemetry generator
+├── pipeline.py                # Validation, transformation, risk scoring, incidents
+├── database.py                # SQLite schema, indexes, migrations
+├── live_business_generator.py # Background process for live order generation
+├── requirements.txt           # Python dependencies
+├── Dockerfile                 # Docker build for Hugging Face Spaces
+└── README.md                  # This file
+```
+
+---
+
+## License
+
+MIT
+
+---
+
+Made by Sourish Dey  
+**FrostPulse — Cold-Chain Intelligence & Business Analytics**

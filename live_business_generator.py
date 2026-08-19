@@ -16,11 +16,11 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from business_generator import generate_business_batch, get_connection
 
-BATCH_SIZE = 3
-SLEEP_SECONDS = 1
-CANCEL_RATE = 0.60
-RETURN_RATE = 0.40
-PURGE_AGE_HOURS = 4
+BATCH_SIZE = 50
+SLEEP_SECONDS = 900
+CANCEL_RATE = 0.50
+RETURN_RATE = 0.30
+PURGE_AGE_HOURS = 720
 
 print(f"[LiveGenerator] Starting: ~{BATCH_SIZE} orders/{SLEEP_SECONDS}s, {CANCEL_RATE*100:.0f}% cancellations, {RETURN_RATE*100:.0f}% returns")
 

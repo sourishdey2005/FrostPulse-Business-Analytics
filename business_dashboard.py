@@ -291,12 +291,12 @@ def page_executive(df: pd.DataFrame, k: dict):
     else:
         empty_state()
 
-    section("Month-over-Month Growth")
-    mom = ba.compute_mom_growth(df)
-    if not mom.empty:
-        fig = px.bar(mom, x="period", y="growth_pct",
-                    labels={"period": "Month", "growth_pct": "Growth %"})
-        render_chart(fig, "exec_mom", height=320, showlegend=False)
+    section("Revenue Distribution")
+    rev_dist = ba.compute_revenue_distribution(df)
+    if not rev_dist.empty:
+        fig = px.histogram(rev_dist, x="bucket", y="count", nbins=25,
+                          labels={"bucket": "Revenue ($)", "count": "Order Lines"})
+        render_chart(fig, "exec_rev_dist", height=340, showlegend=False)
     else:
         empty_state()
 
@@ -323,12 +323,12 @@ def page_executive(df: pd.DataFrame, k: dict):
 # ---------------------------------------------------------------------------
 
 def page_sales(df: pd.DataFrame):
-    section("Revenue by Month")
-    rev_m = ba.compute_revenue_by_period(df, "month")
-    if not rev_m.empty:
-        fig = px.line(rev_m, x="period", y="revenue", markers=True,
-                      labels={"period": "Month", "revenue": "Revenue ($)"})
-        render_chart(fig, "sales_month", height=340)
+    section("Channel Revenue Share")
+    chan = ba.compute_sales_by_channel(df)
+    if not chan.empty:
+        fig = px.pie(chan, names="channel", values="revenue", hole=0.5,
+                     color_discrete_sequence=PALETTE)
+        render_chart(fig, "sales_chan_pie", height=360)
     else:
         empty_state()
 
@@ -505,21 +505,22 @@ def page_customer(df: pd.DataFrame, k: dict):
 
     c5, c6 = st.columns(2)
     with c5:
-        section("Customer Retention Rate")
-        ret = ba.compute_retention_rate(df)
-        if not ret.empty:
-            fig = px.line(ret, x="period", y="retention", markers=True,
-                          labels={"period": "Month", "retention": "Retention (%)"})
-            render_chart(fig, "cust_ret", height=340)
+        section("Customer Segments")
+        seg = ba.compute_customer_segments(df)
+        if not seg.empty:
+            fig = px.pie(seg, names="segment", values="customers", hole=0.5,
+                        color_discrete_sequence=PALETTE)
+            render_chart(fig, "cust_seg_pie", height=340)
         else:
             empty_state()
     with c6:
-        section("Customer Churn Rate")
-        ret = ba.compute_retention_rate(df)
-        if not ret.empty:
-            fig = px.line(ret, x="period", y="churn", markers=True,
-                          labels={"period": "Month", "churn": "Churn (%)"})
-            render_chart(fig, "cust_churn", height=340)
+        section("Customer State Distribution")
+        state_dist = df.groupby("state")["customer_id"].nunique().reset_index().sort_values("customer_id", ascending=True)
+        if not state_dist.empty:
+            fig = px.bar(state_dist, x="customer_id", y="state", orientation="h",
+                        color="customer_id", color_continuous_scale="Blues",
+                        labels={"customer_id": "Customers", "state": "State"})
+            render_chart(fig, "cust_state_bar", height=340, showlegend=False)
         else:
             empty_state()
 
@@ -808,12 +809,13 @@ def page_profit(df: pd.DataFrame, k: dict):
     else:
         empty_state()
 
-    section("Year-over-Year Growth")
-    yoy = ba.compute_yoy_growth(df)
-    if not yoy.empty:
-        fig = px.bar(yoy, x="period", y="growth_pct",
-                    labels={"period": "Year", "growth_pct": "Growth %"})
-        render_chart(fig, "prof_yoy", height=320, showlegend=False)
+    section("Category Revenue Distribution")
+    cat = ba.compute_revenue_by_category(df)
+    if not cat.empty:
+        fig = px.treemap(cat, path=["category"], values="revenue",
+                         color="revenue", color_continuous_scale="Blues",
+                         labels={"revenue": "Revenue ($)"})
+        render_chart(fig, "prof_cat_treemap", height=400, showlegend=False)
     else:
         empty_state()
 
@@ -1101,18 +1103,12 @@ def page_realtime(df: pd.DataFrame, k: dict):
         ("Avg Order Value", f"${_fmt_currency(k['aov'])}", None, None),
     ], ncols=6)
 
-    section("Hourly Revenue & Order Trends")
-    hourly = ba.compute_hourly_trends(df)
-    if not hourly.empty:
-        c1, c2 = st.columns(2)
-        with c1:
-            fig = px.line(hourly, x="hour", y="revenue", markers=True,
-                         labels={"hour": "Hour", "revenue": "Revenue ($)"})
-            render_chart(fig, "rt_hourly_rev", height=320)
-        with c2:
-            fig = px.line(hourly, x="hour", y="orders", markers=True,
-                         labels={"hour": "Hour", "orders": "Orders"})
-            render_chart(fig, "rt_hourly_ord", height=320)
+    section("Basket Size Distribution")
+    basket = ba.compute_basket_size(df)
+    if not basket.empty:
+        fig = px.bar(basket, x="basket_size", y="orders",
+                    labels={"basket_size": "Items per Order", "orders": "Orders"})
+        render_chart(fig, "rt_basket", height=340, showlegend=False)
     else:
         empty_state()
 

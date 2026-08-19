@@ -100,29 +100,22 @@ Power BI-style executive view with 80+ charts across 8 pages:
 
 ```mermaid
 flowchart TD
-    A[🎲 Synthetic IoT Generator] --> B[💾 Raw SQLite Layer]
-    B --> C[✅ Validation & Cleaning]
-    C -->|❌ Invalid| G[🗑️ Rejected Events]
-    C -->|✅ Valid| D[⚙️ Transformation & Risk Engine]
-    D --> E[📊 Analytics Tables]
-    D --> H[🚨 Incident Detection]
-    E --> F[🖥️ Streamlit Dashboard]
+    A[Synthetic IoT Generator] --> B[Raw SQLite Layer]
+    B --> C[Validation & Cleaning]
+    C -->|Invalid| G[Rejected Events]
+    C -->|Valid| D[Transformation & Risk Engine]
+    D --> E[Analytics Tables]
+    D --> H[Incident Detection]
+    E --> F[Streamlit Dashboard]
     H --> F
-    E --> I[📈 KPI Metrics]
-    E --> J[📉 Live Charts]
-    E --> K[⚠️ Risk Monitoring]
-    E --> L[🔧 Pipeline Health]
+    E --> I[KPI Metrics]
+    E --> J[Live Charts]
+    E --> K[Risk Monitoring]
+    E --> L[Pipeline Health]
     F --> I
     F --> J
     F --> K
     F --> L
-    
-    style A fill:#1F6FEB,color:#fff,stroke:#0A1F33,stroke-width:2px
-    style B fill:#22D3EE,color:#0A1F33,stroke:#0A1F33,stroke-width:2px
-    style C fill:#F59E0B,color:#0A1F33,stroke:#0A1F33,stroke-width:2px
-    style D fill:#8B5CF6,color:#fff,stroke:#0A1F33,stroke-width:2px
-    style E fill:#10B981,color:#fff,stroke:#0A1F33,stroke-width:2px
-    style F fill:#EC4899,color:#fff,stroke:#0A1F33,stroke-width:2px
 ```
 
 ---
@@ -231,23 +224,14 @@ Architected and built FrostPulse as a **single-container, zero-configuration pla
 
 ```mermaid
 graph LR
-    A[🎲 Generation] --> B[💾 Raw Storage]
-    B --> C[✅ Validation]
-    C -->|❌ Invalid| D[🗑️ Rejected]
-    C -->|✅ Valid| E[⚙️ Transformation]
-    E --> F[📊 Analytics]
-    E --> G[🚨 Incidents]
-    F --> H[🖥️ Dashboard]
+    A[Generation] --> B[Raw Storage]
+    B --> C[Validation]
+    C -->|Invalid| D[Rejected]
+    C -->|Valid| E[Transformation]
+    E --> F[Analytics]
+    E --> G[Incidents]
+    F --> H[Dashboard]
     G --> H
-    
-    style A fill:#22D3EE,color:#0A1F33,stroke:#0A1F33,stroke-width:2px
-    style B fill:#1F6FEB,color:#fff,stroke:#0A1F33,stroke-width:2px
-    style C fill:#F59E0B,color:#0A1F33,stroke:#0A1F33,stroke-width:2px
-    style D fill:#EF4444,color:#fff,stroke:#0A1F33,stroke-width:2px
-    style E fill:#8B5CF6,color:#fff,stroke:#0A1F33,stroke-width:2px
-    style F fill:#10B981,color:#fff,stroke:#0A1F33,stroke-width:2px
-    style G fill:#EC4899,color:#fff,stroke:#0A1F33,stroke-width:2px
-    style H fill:#F97316,color:#fff,stroke:#0A1F33,stroke-width:2px
 ```
 
 | Stage | Module | Description |

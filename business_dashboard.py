@@ -39,20 +39,45 @@ PALETTE = ["#1F6FEB", "#0EA5E9", "#14B8A6", "#6366F1", "#F59E0B", "#8B5CF6", "#E
 
 BD_CSS = """
 <style>
-    .bd-hero { background: #0A1F33; padding: 1.2rem 1.5rem; border-radius: 12px; margin-bottom: 1rem; }
-    .bd-title { font-size: 2.2rem; font-weight: 800; color: #FFFFFF; margin: 0; letter-spacing: -0.01em; }
-    .bd-sub { font-size: 0.95rem; color: #E2E8F0; margin-top: 0.2rem; }
-    .bd-section { font-size: 1.05rem; font-weight: 700; color: #FFFFFF;
-        background: #0A1F33; border-left: 4px solid #1F6FEB; padding: 0.5rem 0.8rem;
-        border-radius: 6px; margin: 1.4rem 0 0.7rem 0; }
-    .bd-kpi-title { font-size: 0.72rem; color: #64748B; font-weight: 700;
-        text-transform: uppercase; letter-spacing: 0.03em; }
-    .bd-kpi-value { font-size: 1.55rem; color: #0A1F33; font-weight: 800; margin-top: 0.2rem; line-height: 1.1; }
-    .bd-filterbar { background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 12px;
-        padding: 0.9rem 1rem; margin: 1rem 0 0.4rem 0; box-shadow: 0 1px 3px rgba(16,24,40,0.05); }
+    .bd-hero { 
+        background: linear-gradient(135deg, #0A1F33 0%, #1E3A5F 100%); 
+        padding: 1.4rem 1.8rem; 
+        border-radius: 16px; 
+        margin-bottom: 1.2rem; 
+        box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+    }
+    .bd-title { font-size: 2.4rem; font-weight: 800; color: #FFFFFF; margin: 0; letter-spacing: -0.02em; }
+    .bd-sub { font-size: 1.0rem; color: #E2E8F0; margin-top: 0.3rem; font-weight: 500; }
+    .bd-section { 
+        font-size: 1.1rem; font-weight: 700; color: #FFFFFF;
+        background: linear-gradient(90deg, rgba(31, 111, 235, 0.2) 0%, transparent 100%);
+        border-left: 4px solid #1F6FEB; 
+        padding: 0.6rem 1rem; 
+        border-radius: 0 10px 10px 0;
+        margin: 1.8rem 0 0.8rem 0; 
+    }
+    .bd-kpi-title { font-size: 0.75rem; color: #64748B; font-weight: 700;
+        text-transform: uppercase; letter-spacing: 0.04em; }
+    .bd-kpi-value { font-size: 1.6rem; color: #0A1F33; font-weight: 800; margin-top: 0.3rem; line-height: 1.1; }
+    .bd-filterbar { 
+        background: #FFFFFF; 
+        border: 1px solid #E2E8F0; 
+        border-radius: 14px; 
+        padding: 1rem 1.2rem; 
+        margin: 1rem 0 0.6rem 0; 
+        box-shadow: 0 2px 8px rgba(16,24,40,0.06); 
+    }
     .bd-footer { text-align: center; color: #64748B; font-size: 0.85rem; margin-top: 2.5rem;
         padding-top: 1rem; border-top: 1px solid #E2E8F0; }
-    div[data-testid="stTabs"] button { font-weight: 600; }
+    div[data-testid="stTabs"] button { 
+        font-weight: 600; 
+        border-radius: 8px 8px 0 0;
+        padding: 0.6rem 1.2rem;
+    }
+    div[data-testid="stTabs"] button[aria-selected="true"] {
+        background: linear-gradient(180deg, #1F6FEB 0%, #0A1F33 100%);
+        color: white;
+    }
 </style>
 """
 
@@ -77,8 +102,11 @@ def kpi_card(title: str, value: str, delta: float | None = None, positive: bool 
     else:
         delta_html = ""
     return f"""
-    <div style="background:{CARD_BG};border:1px solid {BORDER};border-radius:12px;
-                padding:0.85rem 1rem;box-shadow:0 1px 3px rgba(16,24,40,0.06);height:100%;">
+    <div style="background:{CARD_BG};border:1px solid {BORDER};border-radius:14px;
+                padding:1rem 1.1rem;box-shadow:0 4px 12px rgba(16,24,40,0.08);height:100%;
+                transition: transform 0.2s, box-shadow 0.2s;"
+         onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 8px 20px rgba(16,24,40,0.12)'"
+         onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 4px 12px rgba(16,24,40,0.08)'">
       <div class="bd-kpi-title">{title}</div>
       <div class="bd-kpi-value">{value}</div>
       {delta_html}

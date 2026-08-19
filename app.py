@@ -9,7 +9,9 @@ analytics.py, schema in database.py, synthetic data in generator.py,
 and ETL logic in pipeline.py.
 """
 
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
+
+IST = timezone(timedelta(hours=5, minutes=30))
 
 import pandas as pd
 import plotly.express as px
@@ -53,27 +55,33 @@ CUSTOM_CSS = f"""
 <style>
     #MainMenu {{visibility: hidden;}}
     footer {{visibility: hidden;}}
-    .block-container {{ padding-top: 1.5rem; padding-bottom: 1.5rem; max-width: 1400px; }}
+    .block-container {{ padding-top: 1.2rem; padding-bottom: 2rem; max-width: 1440px; }}
 
     .fp-title {{
-        font-size: 2.4rem;
-        font-weight: 700;
-        color: {WHITE};
+        font-size: 2.6rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #FFFFFF 0%, #22D3EE 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
         margin-bottom: 0;
+        line-height: 1.2;
     }}
     .fp-subtitle {{
-        font-size: 1.0rem;
+        font-size: 1.05rem;
         color: {LIGHT_GRAY};
-        margin-top: 0;
-        letter-spacing: 0.02em;
+        margin-top: 0.3rem;
+        letter-spacing: 0.03em;
+        font-weight: 500;
     }}
     .fp-status-row {{
         display: flex;
         align-items: center;
-        gap: 0.6rem;
-        margin: 0.4rem 0 1.2rem 0;
-        font-size: 0.9rem;
+        gap: 0.7rem;
+        margin: 0.6rem 0 1.4rem 0;
+        font-size: 0.95rem;
         color: {LIGHT_GRAY};
+        font-weight: 500;
     }}
     .fp-live-dot {{
         width: 10px;
@@ -81,31 +89,60 @@ CUSTOM_CSS = f"""
         border-radius: 50%;
         background-color: {SAFE_COLOR};
         display: inline-block;
+        box-shadow: 0 0 8px {SAFE_COLOR};
+        animation: pulse 2s infinite;
+    }}
+    @keyframes pulse {{
+        0% {{ box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7); }}
+        70% {{ box-shadow: 0 0 0 6px rgba(46, 204, 113, 0); }}
+        100% {{ box-shadow: 0 0 0 0 rgba(46, 204, 113, 0); }}
     }}
     .fp-section-header {{
-        font-size: 1.15rem;
-        font-weight: 600;
+        font-size: 1.2rem;
+        font-weight: 700;
         color: {WHITE};
+        background: linear-gradient(90deg, rgba(34, 211, 238, 0.15) 0%, transparent 100%);
         border-left: 4px solid {CYAN};
-        padding-left: 0.6rem;
-        margin: 1.6rem 0 0.8rem 0;
+        padding: 0.6rem 0.8rem;
+        margin: 1.8rem 0 0.8rem 0;
+        border-radius: 0 8px 8px 0;
     }}
     div[data-testid="stMetric"] {{
-        background-color: rgba(255,255,255,0.03);
-        border: 1px solid rgba(255,255,255,0.08);
-        border-radius: 10px;
-        padding: 0.8rem 0.9rem 0.6rem 0.9rem;
+        background: linear-gradient(145deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 12px;
+        padding: 1rem 1.1rem 0.8rem 1.1rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        transition: transform 0.2s, box-shadow 0.2s;
+    }}
+    div[data-testid="stMetric"]:hover {{
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(0,0,0,0.3);
     }}
     div[data-testid="stMetricLabel"] {{
         color: {LIGHT_GRAY};
+        font-weight: 600;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }}
+    div[data-testid="stMetricValue"] {{
+        color: {WHITE};
+        font-weight: 700;
+        font-size: 1.4rem;
     }}
     .fp-footer {{
         text-align: center;
         color: {LIGHT_GRAY};
         font-size: 0.85rem;
-        margin-top: 2.5rem;
-        padding-top: 1rem;
+        margin-top: 3rem;
+        padding-top: 1.2rem;
         border-top: 1px solid rgba(255,255,255,0.08);
+    }}
+    .stPlotlyChart {{
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     }}
 </style>
 """
@@ -134,12 +171,13 @@ def _theme(fig, height: int = 360, showlegend: bool = True, margin=None):
 
 @st.cache_resource
 def bootstrap() -> bool:
-    is_new = initialize_database()
+    initialize_database()
     seed_master_data()
-    if is_new or table_row_count("fact_sensor_reading") == 0:
+    if table_row_count("dim_vehicle") == 0 or table_row_count("dim_shipment") == 0:
+        seed_master_data()
+    if table_row_count("fact_sensor_reading") == 0:
         historical = generate_historical_batch(count=700, span_minutes=45)
         run_pipeline(historical)
-    # Seed the independent Business Analytics layer (synthetic sales data).
     seed_business_data(months=24)
     return True
 
@@ -168,7 +206,7 @@ def live_dashboard():
     except Exception as exc:  # noqa: BLE001
         pipeline_error = str(exc)
 
-    now_str = datetime.now(timezone.utc).strftime("%H:%M:%S UTC")
+    now_str = datetime.now(IST).strftime("%H:%M:%S IST")
     st.markdown(
         f'<div class="fp-status-row"><span class="fp-live-dot"></span>'
         f'LIVE SYSTEM &nbsp;|&nbsp; Last updated: {now_str}</div>',
@@ -300,19 +338,19 @@ def live_dashboard():
     # ------------------------------------------------------------- Charts 3
     col_c, col_d = st.columns(2)
     with col_c:
-        st.markdown('<div class="fp-section-header">Risk by Food Category</div>', unsafe_allow_html=True)
-        food_df = analytics.get_risk_by_food_category()
-        if not food_df.empty:
+        st.markdown('<div class="fp-section-header">Risk by Warehouse</div>', unsafe_allow_html=True)
+        wh_df = analytics.get_risk_by_warehouse()
+        if not wh_df.empty:
             fig = px.bar(
-                food_df, x="food_category", y="avg_risk", color="avg_risk",
+                wh_df, x="warehouse", y="avg_risk", color="avg_risk",
                 color_continuous_scale=["#2ECC71", "#F39C12", "#C0392B"],
-                labels={"food_category": "Food Category", "avg_risk": "Avg Risk Score"},
+                labels={"warehouse": "Warehouse", "avg_risk": "Avg Risk Score"},
             )
             fig.update_layout(
                 template="plotly_dark", plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)",
                 height=340, margin=dict(l=10, r=10, t=10, b=10), coloraxis_showscale=False,
             )
-            st.plotly_chart(fig, use_container_width=True, key="food_risk_bar")
+            st.plotly_chart(fig, use_container_width=True, key="warehouse_risk_bar")
     with col_d:
         st.markdown('<div class="fp-section-header">Vehicle Health</div>', unsafe_allow_html=True)
         if not vehicle_health_df.empty:

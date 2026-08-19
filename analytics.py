@@ -130,6 +130,17 @@ def get_risk_distribution() -> pd.DataFrame:
     )
 
 
+def get_risk_by_warehouse() -> pd.DataFrame:
+    return _df(
+        """SELECT warehouse,
+                  AVG(risk_score) AS avg_risk,
+                  100.0 * SUM(CASE WHEN temperature_status='SAFE' THEN 1 ELSE 0 END) / COUNT(*) AS compliance_pct
+           FROM fact_sensor_reading
+           GROUP BY warehouse
+           ORDER BY avg_risk DESC;"""
+    )
+
+
 def get_risk_by_food_category() -> pd.DataFrame:
     return _df(
         """SELECT ds.food_category AS food_category,

@@ -480,7 +480,7 @@ frostpulse/
 
 <br>
 
-[![Live Demo](https://img.shields.io/badge/🌐_Live_Demo- frostpulse--business--analytics.streamlit.app-blue?style=for-the-badge&logo=streamlit&logoColor=white)](https://frostpulse-business-analytics.streamlit.app/)
+[![Live Demo](https://img.shields.io/badge/🌐_Live_Demo-frostpulse--business--analytics.streamlit.app-blue?style=for-the-badge&logo=streamlit&logoColor=white)](https://frostpulse-business-analytics.streamlit.app/)
 [![GitHub](https://img.shields.io/badge/💻_GitHub-sourishdey2005%2FFrostPulse--Business--Analytics-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/sourishdey2005/FrostPulse-Business-Analytics)
 
 </div>

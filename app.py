@@ -53,35 +53,79 @@ RECORDS_PER_CYCLE = (20, 50)
 
 CUSTOM_CSS = f"""
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
     #MainMenu {{visibility: hidden;}}
     footer {{visibility: hidden;}}
-    .block-container {{ padding-top: 1.2rem; padding-bottom: 2rem; max-width: 1440px; }}
+    .block-container {{ 
+        padding-top: 1rem; 
+        padding-bottom: 2rem; 
+        max-width: 1440px; 
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }}
 
+    .fp-header {{
+        text-align: center;
+        padding: 1.5rem 1rem 1rem 1rem;
+        margin-bottom: 0.5rem;
+    }}
     .fp-title {{
-        font-size: 2.6rem;
+        font-size: 3rem;
         font-weight: 800;
         background: linear-gradient(135deg, #FFFFFF 0%, #22D3EE 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
-        margin-bottom: 0;
-        line-height: 1.2;
+        margin: 0;
+        line-height: 1.1;
+        letter-spacing: -0.03em;
     }}
     .fp-subtitle {{
-        font-size: 1.05rem;
+        font-size: 1.1rem;
         color: {LIGHT_GRAY};
-        margin-top: 0.3rem;
-        letter-spacing: 0.03em;
+        margin-top: 0.4rem;
+        letter-spacing: 0.04em;
         font-weight: 500;
+    }}
+    .fp-nav {{
+        display: flex;
+        justify-content: center;
+        gap: 0.5rem;
+        margin: 1rem 0 0.8rem 0;
+    }}
+    .fp-nav-item {{
+        padding: 0.6rem 2rem;
+        border-radius: 10px 10px 0 0;
+        font-size: 0.95rem;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+        cursor: pointer;
+        transition: all 0.2s;
+    }}
+    .fp-nav-active {{
+        background: linear-gradient(180deg, #1F6FEB 0%, #0A1F33 100%);
+        color: #FFFFFF;
+        box-shadow: 0 4px 12px rgba(31, 111, 235, 0.3);
+    }}
+    .fp-nav-inactive {{
+        background: rgba(255,255,255,0.05);
+        color: {LIGHT_GRAY};
+        border: 1px solid rgba(255,255,255,0.1);
+    }}
+    .fp-nav-inactive:hover {{
+        background: rgba(255,255,255,0.08);
+        color: #FFFFFF;
     }}
     .fp-status-row {{
         display: flex;
         align-items: center;
+        justify-content: center;
         gap: 0.7rem;
-        margin: 0.6rem 0 1.4rem 0;
+        margin: 0.8rem 0 1.6rem 0;
         font-size: 0.95rem;
         color: {LIGHT_GRAY};
         font-weight: 500;
+        letter-spacing: 0.02em;
     }}
     .fp-live-dot {{
         width: 10px;
@@ -89,23 +133,24 @@ CUSTOM_CSS = f"""
         border-radius: 50%;
         background-color: {SAFE_COLOR};
         display: inline-block;
-        box-shadow: 0 0 8px {SAFE_COLOR};
+        box-shadow: 0 0 10px {SAFE_COLOR};
         animation: pulse 2s infinite;
     }}
     @keyframes pulse {{
         0% {{ box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7); }}
-        70% {{ box-shadow: 0 0 0 6px rgba(46, 204, 113, 0); }}
+        70% {{ box-shadow: 0 0 0 8px rgba(46, 204, 113, 0); }}
         100% {{ box-shadow: 0 0 0 0 rgba(46, 204, 113, 0); }}
     }}
     .fp-section-header {{
-        font-size: 1.2rem;
+        font-size: 1.15rem;
         font-weight: 700;
         color: {WHITE};
         background: linear-gradient(90deg, rgba(34, 211, 238, 0.15) 0%, transparent 100%);
         border-left: 4px solid {CYAN};
-        padding: 0.6rem 0.8rem;
+        padding: 0.65rem 0.9rem;
         margin: 1.8rem 0 0.8rem 0;
         border-radius: 0 8px 8px 0;
+        letter-spacing: 0.01em;
     }}
     div[data-testid="stMetric"] {{
         background: linear-gradient(145deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%);
@@ -122,14 +167,14 @@ CUSTOM_CSS = f"""
     div[data-testid="stMetricLabel"] {{
         color: {LIGHT_GRAY};
         font-weight: 600;
-        font-size: 0.8rem;
+        font-size: 0.78rem;
         text-transform: uppercase;
-        letter-spacing: 0.04em;
+        letter-spacing: 0.05em;
     }}
     div[data-testid="stMetricValue"] {{
         color: {WHITE};
         font-weight: 700;
-        font-size: 1.4rem;
+        font-size: 1.35rem;
     }}
     .fp-footer {{
         text-align: center;
@@ -138,11 +183,64 @@ CUSTOM_CSS = f"""
         margin-top: 3rem;
         padding-top: 1.2rem;
         border-top: 1px solid rgba(255,255,255,0.08);
+        letter-spacing: 0.02em;
     }}
     .stPlotlyChart {{
         border-radius: 12px;
         overflow: hidden;
         box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }}
+
+    /* Center and style navigation radio buttons */
+    div[data-testid="stRadio"] {{
+        display: flex;
+        justify-content: center;
+        margin: 0.8rem 0 1.2rem 0;
+    }}
+    div[data-testid="stRadio"] > div {{
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 12px;
+        padding: 0.3rem;
+        display: inline-flex;
+        gap: 0.3rem;
+    }}
+    div[data-testid="stRadio"] label {{
+        font-family: 'Inter', sans-serif !important;
+        font-weight: 600 !important;
+        font-size: 0.9rem !important;
+        letter-spacing: 0.03em;
+        padding: 0.55rem 2rem !important;
+        border-radius: 10px !important;
+        transition: all 0.2s;
+    }}
+    div[data-testid="stRadio"] label:hover {{
+        background: rgba(255,255,255,0.08);
+    }}
+
+    /* Business Analytics tab styles */
+    .bd-hero {{ 
+        background: linear-gradient(135deg, #0A1F33 0%, #1E3A5F 100%); 
+        padding: 1.4rem 1.8rem; 
+        border-radius: 16px; 
+        margin-bottom: 1.2rem; 
+        box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+        text-align: center;
+    }}
+    .bd-title {{ 
+        font-size: 2.4rem; 
+        font-weight: 800; 
+        color: #FFFFFF; 
+        margin: 0; 
+        letter-spacing: -0.02em;
+        font-family: 'Inter', sans-serif;
+    }}
+    .bd-sub {{ 
+        font-size: 1.05rem; 
+        color: #E2E8F0; 
+        margin-top: 0.3rem; 
+        font-weight: 500;
+        letter-spacing: 0.03em;
     }}
 </style>
 """
@@ -700,11 +798,7 @@ def live_dashboard():
 
 
 def _render_operations():
-    st.markdown('<div class="fp-title">FrostPulse</div>', unsafe_allow_html=True)
-    st.markdown(
-        '<div class="fp-subtitle">Cold-Chain Intelligence &amp; Shipment Risk Monitoring</div>',
-        unsafe_allow_html=True,
-    )
+    st.markdown('<div class="fp-header"><div class="fp-title">FrostPulse</div><div class="fp-subtitle">Cold-Chain Intelligence &amp; Shipment Risk Monitoring</div></div>', unsafe_allow_html=True)
     live_dashboard()
     st.markdown(
         '<div class="fp-footer">Made by Sourish Dey<br>FrostPulse — Cold-Chain Intelligence</div>',
@@ -721,6 +815,7 @@ VIEW = st.radio(
     ["Operations", "Business Analytics"],
     index=0,
     horizontal=True,
+    label_visibility="collapsed",
 )
 
 if VIEW == "Business Analytics":
